@@ -17,10 +17,16 @@ main =
 
 type Status = Completed | Incomplete
 
+type alias Task =
+  {
+  title : String,
+  position : Int
+  }
+
 type alias Model =
-  { taskList : List String,
+  { taskList : List Task,
     content : String,
-    completedTasks : Dict.Dict String Status,
+    completedTasks : Dict.Dict Int Status,
     currentTime : Int,
     clockStarted : Bool
   }
@@ -35,7 +41,7 @@ init _ =
 type Msg
   = AddNewTask String
   | UpdateContent String
-  | UpdateTaskCompletion String
+  | UpdateTaskCompletion Task
   | StartClock Bool
   | Tick Time.Posix
 
@@ -54,7 +60,7 @@ update msg model =
   case msg of
     StartClock hasStarted -> ({ model | clockStarted = hasStarted }, Cmd.none)
     AddNewTask task->
-      ( { model | taskList = List.append model.taskList [task] },
+      ( { model | taskList = List.append model.taskList [{title = task, position = (List.length model.taskList)}] },
         Cmd.none
       )
     UpdateContent newContent ->
@@ -63,7 +69,7 @@ update msg model =
       }, Cmd.none)
     UpdateTaskCompletion task ->
       ({
-      model | completedTasks = Dict.insert task (toggle (getTaskValue task model.completedTasks)) model.completedTasks
+      model | completedTasks = Dict.insert task.position (toggle (getTaskValue task.position model.completedTasks)) model.completedTasks
       }, Cmd.none)
     Tick time ->
       if model.clockStarted then
@@ -83,7 +89,7 @@ checkStatus task tasksCompleted =
 printTasks taskList acc completedTasks =
   case taskList of
     [] -> acc
-    (h::t) -> printTasks t (List.append acc [div [] [ input [ type_ "checkbox", checked (checkStatus h completedTasks), onClick (UpdateTaskCompletion h)] [] , text h]]) completedTasks
+    (task::rest) -> printTasks rest (List.append acc [div [] [ input [ type_ "checkbox", checked (checkStatus task.position completedTasks), onClick (UpdateTaskCompletion task)] [] , text task.title]]) completedTasks
 
 getMinutesFromTime time = time // 60
 
@@ -103,5 +109,5 @@ view model =
      button [ onClick (StartClock (not model.clockStarted))  ] [ text ( if model.clockStarted then "Stop Timer" else  "Start Timer") ],
      div [] [text (minute ++ ":" ++ seconds) ],
      input [placeholder "Add New Task", value model.content, onInput UpdateContent ] [ ],
-     button [ onClick (AddNewTask model.content) ] [ text "Add New Task" ], div []  (printTasks model.taskList [div [] []] model.completedTasks)
-    ]
+     button [ onClick (AddNewTask model.content) ] [ text "Add New Task" ],
+     div []  (printTasks model.taskList [div [] []] model.completedTasks)
