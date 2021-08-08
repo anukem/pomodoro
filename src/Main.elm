@@ -34,7 +34,7 @@ type alias Model =
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( {taskList = [], content = "", completedTasks = Dict.fromList [], currentTime = 25 * 60, clockStarted = False},
+  ( {taskList = [], content = "", completedTasks = Dict.fromList [], currentTime = 1 * 10, clockStarted = False},
   Cmd.none
   )
 
@@ -72,7 +72,7 @@ update msg model =
       model | completedTasks = Dict.insert task.position (toggle (getTaskValue task.position model.completedTasks)) model.completedTasks
       }, Cmd.none)
     Tick time ->
-      if model.clockStarted then
+      if model.clockStarted && model.currentTime /= 0 then
       ({ model | currentTime = model.currentTime - 1 }, Cmd.none) else (model, Cmd.none)
 
 subscriptions : Model -> Sub Msg
@@ -111,3 +111,4 @@ view model =
      input [placeholder "Add New Task", value model.content, onInput UpdateContent ] [ ],
      button [ onClick (AddNewTask model.content) ] [ text "Add New Task" ],
      div []  (printTasks model.taskList [div [] []] model.completedTasks)
+     ]
