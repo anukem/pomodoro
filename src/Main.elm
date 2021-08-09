@@ -6,6 +6,7 @@ import Html.Events exposing (..)
 import Random
 import Html.Attributes exposing (..)
 import Time
+import Json.Decode as Json
 
 main =
   Browser.element
@@ -47,6 +48,7 @@ type Msg
   | StartClock Bool
   | Tick Time.Posix
   | ChangeStartTime StartingTime
+  | KeyDown Int
 
 toggle s =
   case s of
@@ -69,6 +71,8 @@ addNewTask model task = List.append model.taskList [{title = task, position = (L
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
+    KeyDown key ->
+      if key == 13 then ({ model | taskList = addNewTask model model.content }, Cmd.none) else (model, Cmd.none)
     ChangeStartTime duration ->
       ({model | currentTime = (setCurrentTime duration), clockStarted = False }, Cmd.none)
     StartClock hasStarted -> ({ model | clockStarted = hasStarted }, Cmd.none)
@@ -110,6 +114,10 @@ getSecondsFromTime time =
   let seconds = String.fromInt (modBy 60 time) in
   if String.length seconds == 1 then "0" ++ seconds else seconds
 
+
+onKeyDown tagger =
+  on "keydown" (Json.map tagger keyCode)
+
 view : Model -> Html Msg
 view model =
   let
@@ -124,7 +132,7 @@ view model =
      button [ onClick (ChangeStartTime ShortBreak )  ] [ text "Short Break" ],
      button [ onClick (StartClock (not model.clockStarted))  ] [ text ( if model.clockStarted then "Stop Timer" else  "Start Timer") ],
      div [] [text (minute ++ ":" ++ seconds) ],
-     input [placeholder "Add New Task", value model.content, onInput UpdateContent  ] [ ],
+     input [placeholder "Add New Task", value model.content, onInput UpdateContent, onKeyDown KeyDown ] [ ],
      button [ onClick (AddNewTask model.content) ] [ text "Add New Task" ],
      div []  (printTasks model.taskList [div [] []] model.completedTasks)
      ]
