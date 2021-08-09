@@ -64,6 +64,8 @@ getTaskValue k dict =
     Nothing -> Incomplete
     Just v -> v
 
+addNewTask model task = List.append model.taskList [{title = task, position = (List.length model.taskList)}]
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
@@ -71,7 +73,7 @@ update msg model =
       ({model | currentTime = (setCurrentTime duration), clockStarted = False }, Cmd.none)
     StartClock hasStarted -> ({ model | clockStarted = hasStarted }, Cmd.none)
     AddNewTask task->
-      ( { model | taskList = List.append model.taskList [{title = task, position = (List.length model.taskList)}] },
+      ( { model | taskList = (addNewTask model task)  },
         Cmd.none
       )
     UpdateContent newContent ->
