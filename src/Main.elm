@@ -29,7 +29,7 @@ type StartingTime = Regular | ShortBreak | LongBreak
 type alias Model =
   { taskList : List Task,
     content : String,
-    completedTasks : Dict.Dict Int Status,
+    taskMap : Dict.Dict Int Status,
     currentTime : Int,
     clockStarted : Bool
   }
@@ -37,7 +37,7 @@ type alias Model =
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( {taskList = [], content = "", completedTasks = Dict.fromList [], currentTime = (setCurrentTime Regular), clockStarted = False},
+  ( {taskList = [], content = "", taskMap = Dict.fromList [], currentTime = (setCurrentTime Regular), clockStarted = False},
   Cmd.none
   )
 
@@ -86,7 +86,7 @@ update msg model =
       }, Cmd.none)
     UpdateTaskCompletion task ->
       ({
-      model | completedTasks = Dict.insert task.position (toggle (getTaskValue task.position model.completedTasks)) model.completedTasks
+      model | taskMap = Dict.insert task.position (toggle (getTaskValue task.position model.taskMap)) model.taskMap
       }, Cmd.none)
     Tick time ->
       if model.clockStarted && model.currentTime /= 0 then
@@ -103,10 +103,10 @@ statusToBool s =
 checkStatus task tasksCompleted =
   Dict.get task tasksCompleted |> Maybe.withDefault Incomplete |> statusToBool
 
-printTasks taskList acc completedTasks =
+printTasks taskList acc taskMap =
   case taskList of
     [] -> acc
-    (task::rest) -> printTasks rest (List.append acc [div [] [ input [ type_ "checkbox", checked (checkStatus task.position completedTasks), onClick (UpdateTaskCompletion task)] [] , text task.title]]) completedTasks
+    (task::rest) -> printTasks rest (List.append acc [div [] [ input [ type_ "checkbox", checked (checkStatus task.position taskMap), onClick (UpdateTaskCompletion task)] [] , text task.title]]) taskMap
 
 getMinutesFromTime time = time // 60
 
@@ -134,5 +134,5 @@ view model =
      div [] [text (minute ++ ":" ++ seconds) ],
      input [placeholder "Add New Task", value model.content, onInput UpdateContent, onKeyDown KeyDown ] [ ],
      button [ onClick (AddNewTask model.content) ] [ text "Add New Task" ],
-     div []  (printTasks model.taskList [div [] []] model.completedTasks)
+     div []  (printTasks model.taskList [div [] []] model.taskMap)
      ]
