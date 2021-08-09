@@ -23,6 +23,8 @@ type alias Task =
   position : Int
   }
 
+type StartingTime = Regular | ShortBreak | LongBreak
+
 type alias Model =
   { taskList : List Task,
     content : String,
@@ -34,7 +36,7 @@ type alias Model =
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( {taskList = [], content = "", completedTasks = Dict.fromList [], currentTime = 1 * 10, clockStarted = False},
+  ( {taskList = [], content = "", completedTasks = Dict.fromList [], currentTime = (setCurrentTime Regular), clockStarted = False},
   Cmd.none
   )
 
@@ -44,11 +46,18 @@ type Msg
   | UpdateTaskCompletion Task
   | StartClock Bool
   | Tick Time.Posix
+  | ChangeStartTime StartingTime
 
 toggle s =
   case s of
     Completed -> Incomplete
     Incomplete -> Completed
+
+setCurrentTime duration =
+  case duration of
+    ShortBreak -> 5 * 60
+    LongBreak -> 15 * 60
+    Regular -> 25 * 60
 
 getTaskValue k dict =
   case Dict.get k dict of
@@ -58,6 +67,8 @@ getTaskValue k dict =
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
+    ChangeStartTime duration ->
+      ({model | currentTime = (setCurrentTime duration), clockStarted = False }, Cmd.none)
     StartClock hasStarted -> ({ model | clockStarted = hasStarted }, Cmd.none)
     AddNewTask task->
       ( { model | taskList = List.append model.taskList [{title = task, position = (List.length model.taskList)}] },
@@ -106,9 +117,12 @@ view model =
 
   div []
     [
+     button [ onClick (ChangeStartTime LongBreak )  ] [ text "Long Break" ],
+     button [ onClick (ChangeStartTime Regular )  ] [ text "Pomodoro" ],
+     button [ onClick (ChangeStartTime ShortBreak )  ] [ text "Short Break" ],
      button [ onClick (StartClock (not model.clockStarted))  ] [ text ( if model.clockStarted then "Stop Timer" else  "Start Timer") ],
      div [] [text (minute ++ ":" ++ seconds) ],
-     input [placeholder "Add New Task", value model.content, onInput UpdateContent ] [ ],
+     input [placeholder "Add New Task", value model.content, onInput UpdateContent,  ] [ ],
      button [ onClick (AddNewTask model.content) ] [ text "Add New Task" ],
      div []  (printTasks model.taskList [div [] []] model.completedTasks)
      ]
