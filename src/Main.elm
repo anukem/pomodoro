@@ -122,7 +122,7 @@ view model =
      button [ onClick (ChangeStartTime ShortBreak )  ] [ text "Short Break" ],
      button [ onClick (StartClock (not model.clockStarted))  ] [ text ( if model.clockStarted then "Stop Timer" else  "Start Timer") ],
      div [] [text (minute ++ ":" ++ seconds) ],
-     input [placeholder "Add New Task", value model.content, onInput UpdateContent,  ] [ ],
+     input [placeholder "Add New Task", value model.content, onInput UpdateContent  ] [ ],
      button [ onClick (AddNewTask model.content) ] [ text "Add New Task" ],
      div []  (printTasks model.taskList [div [] []] model.completedTasks)
      ]
