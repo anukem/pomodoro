@@ -6,4 +6,4 @@ Goals:
 
 - [ x ] Create a to do list that keeps track of all the things I'm working on in the pomodoro, and only caries over things i didn't complete.
 
-3. Keeps a running tally of how many pomodoros a task has spanned over if not completed.
+- [ x ] Keeps a running tally of how many pomodoros a task has spanned over if not completed.
