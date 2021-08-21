@@ -134,5 +134,7 @@ view model =
      div [] [text (minute ++ ":" ++ seconds) ],
      input [placeholder "Add New Task", value model.content, onInput UpdateContent, onKeyDown KeyDown ] [ ],
      button [ onClick (AddNewTask model.content) ] [ text "Add New Task" ],
-     div []  (printTasks model.taskList [div [] []] model.taskMap)
+     div [  ] [text "Current Tasks"],
+     div []  (printTasks model.taskList [div [] []] model.taskMap),
+     div [  ] [text "Completed Tasks"]
      ]
