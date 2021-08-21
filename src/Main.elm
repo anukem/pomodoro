@@ -100,14 +100,16 @@ statusToBool s =
   Incomplete -> False
   Completed -> True
 
-checkStatus : Dict.Dict Int Status -> Task -> Bool
-checkStatus tasksCompleted task  =
-  Dict.get task.position tasksCompleted |> Maybe.withDefault Incomplete |> statusToBool
+testNegate shouldNegate status = if shouldNegate then not status else status
+
+checkStatus : Dict.Dict Int Status -> Bool -> Task -> Bool
+checkStatus  tasksCompleted shouldNegate task  =
+  Dict.get task.position tasksCompleted |> Maybe.withDefault Incomplete |> statusToBool |> testNegate shouldNegate
 
 printTasks taskList acc taskMap =
   case taskList of
     [] -> acc
-    (task::rest) -> printTasks rest (List.append acc [div [] [ input [ type_ "checkbox", checked (checkStatus taskMap task), onClick (UpdateTaskCompletion task)] [] , text task.title]]) taskMap
+    (task::rest) -> printTasks rest (List.append acc [div [] [ input [ type_ "checkbox", checked (checkStatus taskMap False task), onClick (UpdateTaskCompletion task)] [] , text task.title]]) taskMap
 
 getMinutesFromTime time = time // 60
 
@@ -136,6 +138,7 @@ view model =
      input [placeholder "Add New Task", value model.content, onInput UpdateContent, onKeyDown KeyDown ] [ ],
      button [ onClick (AddNewTask model.content) ] [ text "Add New Task" ],
      div [  ] [text "Current Tasks"],
-     div []  (printTasks (List.filter  (checkStatus model.taskMap) model.taskList) [div [] []] model.taskMap),
-     div [  ] [text "Completed Tasks"]
+     div []  (printTasks (List.filter (checkStatus  model.taskMap True) model.taskList) [div [] []] model.taskMap),
+     div [  ] [text "Completed Tasks"],
+     div []  (printTasks (List.filter (checkStatus  model.taskMap False) model.taskList) [div [] []] model.taskMap)
      ]
