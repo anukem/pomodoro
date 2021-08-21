@@ -136,7 +136,7 @@ update msg model =
         Tick time ->
             if model.clockStarted then
                 if model.currentTime == 0 then
-                    ( { model | taskList = applyAddOne (List.filter (checkStatus model.taskMap True) model.taskList), totalNumOfPomos = model.totalNumOfPomos + 1, clockStarted = False }, Cmd.none )
+                    ( { model | taskList = applyAddOne model.taskList model.taskMap, totalNumOfPomos = model.totalNumOfPomos + 1, clockStarted = False }, Cmd.none )
 
                 else
                     ( { model | currentTime = model.currentTime - 1 }, Cmd.none )
@@ -145,13 +145,18 @@ update msg model =
                 ( model, Cmd.none )
 
 
-addOne : Task -> Task
-addOne task =
-    { task | numOfPomos = task.numOfPomos + 1 }
+addOne : Dict.Dict Int Status -> Task -> Task
+addOne taskMap task =
+    if checkStatus taskMap True task then
+        { task | numOfPomos = task.numOfPomos + 1 }
+
+    else
+        task
 
 
-applyAddOne taskList =
-    List.map addOne taskList
+applyAddOne : List Task -> Dict.Dict Int Status -> List Task
+applyAddOne taskList taskMap =
+    List.map (addOne taskMap) taskList
 
 
 subscriptions : Model -> Sub Msg
