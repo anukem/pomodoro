@@ -27,6 +27,7 @@ type Status
 type alias Task =
     { title : String
     , position : Int
+    , numOfPomos : Int
     }
 
 
@@ -42,12 +43,13 @@ type alias Model =
     , taskMap : Dict.Dict Int Status
     , currentTime : Int
     , clockStarted : Bool
+    , totalNumOfPomos : Int
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { taskList = [], content = "", taskMap = Dict.fromList [], currentTime = setCurrentTime Regular, clockStarted = False }
+    ( { taskList = [], content = "", taskMap = Dict.fromList [], currentTime = setCurrentTime Regular, clockStarted = False, totalNumOfPomos = 0 }
     , Cmd.none
     )
 
@@ -93,7 +95,7 @@ getTaskValue k dict =
 
 
 addNewTask model task =
-    List.append model.taskList [ { title = task, position = List.length model.taskList } ]
+    List.append model.taskList [ { title = task, position = List.length model.taskList, numOfPomos = 0 } ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -134,13 +136,22 @@ update msg model =
         Tick time ->
             if model.clockStarted then
                 if model.currentTime == 0 then
-                    ( { model | taskList = List.filter (checkStatus model.taskMap True) model.taskList }, Cmd.none )
+                    ( { model | taskList = applyAddOne (List.filter (checkStatus model.taskMap True) model.taskList), totalNumOfPomos = model.totalNumOfPomos + 1, clockStarted = False }, Cmd.none )
 
                 else
                     ( { model | currentTime = model.currentTime - 1 }, Cmd.none )
 
             else
                 ( model, Cmd.none )
+
+
+addOne : Task -> Task
+addOne task =
+    { task | numOfPomos = task.numOfPomos + 1 }
+
+
+applyAddOne taskList =
+    List.map addOne taskList
 
 
 subscriptions : Model -> Sub Msg
@@ -170,7 +181,7 @@ checkStatus tasksCompleted shouldNegate task =
     Dict.get task.position tasksCompleted |> Maybe.withDefault Incomplete |> statusToBool |> negate shouldNegate
 
 
-printTasks taskList acc taskMap =
+printTasks taskList acc taskMap totalPomos =
     case taskList of
         [] ->
             acc
@@ -186,10 +197,12 @@ printTasks taskList acc taskMap =
                             ]
                             []
                         , text task.title
+                        , text (" " ++ String.fromInt task.numOfPomos ++ "/" ++ String.fromInt totalPomos)
                         ]
                     ]
                 )
                 taskMap
+                totalPomos
 
 
 getMinutesFromTime time =
@@ -238,7 +251,7 @@ view model =
         , input [ placeholder "Add New Task", value model.content, onInput UpdateContent, onKeyDown KeyDown ] []
         , button [ onClick (AddNewTask model.content) ] [ text "Add New Task" ]
         , div [] [ text "Current Tasks" ]
-        , div [] (printTasks (List.filter (checkStatus model.taskMap True) model.taskList) [ div [] [] ] model.taskMap)
+        , div [] (printTasks (List.filter (checkStatus model.taskMap True) model.taskList) [ div [] [] ] model.taskMap model.totalNumOfPomos)
         , div [] [ text "Completed Tasks" ]
-        , div [] (printTasks (List.filter (checkStatus model.taskMap False) model.taskList) [ div [] [] ] model.taskMap)
+        , div [] (printTasks (List.filter (checkStatus model.taskMap False) model.taskList) [ div [] [] ] model.taskMap model.totalNumOfPomos)
         ]
