@@ -74,7 +74,7 @@ toggle s =
 setCurrentTime duration =
     case duration of
         ShortBreak ->
-            5 * 60
+            1 * 3
 
         LongBreak ->
             15 * 60
@@ -132,8 +132,12 @@ update msg model =
             )
 
         Tick time ->
-            if model.clockStarted && model.currentTime /= 0 then
-                ( { model | currentTime = model.currentTime - 1 }, Cmd.none )
+            if model.clockStarted then
+                if model.currentTime == 0 then
+                    ( { model | taskList = List.filter (checkStatus model.taskMap True) model.taskList }, Cmd.none )
+
+                else
+                    ( { model | currentTime = model.currentTime - 1 }, Cmd.none )
 
             else
                 ( model, Cmd.none )
@@ -156,6 +160,7 @@ statusToBool s =
 negate shouldNegate status =
     if shouldNegate then
         not status
+
     else
         status
 
